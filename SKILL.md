@@ -1,113 +1,124 @@
 ---
 name: global-shop
-description: 全球购物比价与下单技能。当用户表达购买意图（如"帮我买XXX"、"想买XXX"、"全球搜索XXX"、"比价XXX"）时触发。支持：搜索多个全球电商平台（Amazon、eBay、AliExpress、天猫国际、京东全球购等），聚合结果并筛选3~5个最优选项展示给用户对比（价格、平台、配送时间、评分），用户选择后跳转至目标平台页面完成购买。支付方式支持平台账户支付和信用卡统一支付（用户可选择记住信用卡）。AI不接触支付密码，所有支付需用户最终确认。
+description: Global shopping comparison and ordering skill. Trigger whenever a user expresses purchase intent — phrases like "help me buy", "find me the best price on", "where can I get", "shop for", "compare prices for", "帮我买", "想买", "全球搜索", "比价" all apply. Supports searching Amazon, eBay, Walmart, Temu, Etsy, and AliExpress; aggregates results and shows the 3–5 best options as visual cards with images, price+shipping totals, ratings, and a Best Value badge. User selects, then is directed to the platform to complete purchase. AI never touches payment passwords or CVV.
 ---
 
 # Global Shop — 全球购物比价与下单
 
-## 核心原则
+## Core Principles
 
-**用户主导决策**：AI 做搜索和筛选，用户做最终选择和确认。AI 不擅自下单，不存储 CVV，不接触支付密码。
+**User drives decisions**: AI searches and filters; user makes the final choice and confirms. AI never places orders autonomously, never stores CVV, never touches payment passwords.
 
-## 工作流
+## Workflow
 
 ```
-用户表达购买意图
+User expresses purchase intent (English or Chinese)
     ↓
-解析商品关键词（支持中英文、品牌、型号）
+Parse product keywords (supports EN/ZH, brand names, model numbers)
     ↓
-并发搜索多个全球平台
+Concurrently search all platforms
     ↓
-聚合去重 → 按「价格+评分+配送+销量」综合评分
+Aggregate & deduplicate → score by (price + rating + shipping + reviews)
     ↓
-展示 3~5 个最优选项（对比表格）
+Display 3–5 best options as cards (image, price+shipping total, rating, Best Value badge)
     ↓
-用户选择 [A/B/C...]
+User selects [A/B/C...]
     ↓
-根据用户选择的平台和支付方式，跳转到对应页面
+Redirect user to platform page to complete purchase
     ↓
-用户自行完成支付（平台页面或支付确认弹窗）
+User completes payment on platform (AI does not handle payment)
 ```
 
-## 搜索执行
+## Search Execution
 
-使用 `scripts/search.py` 并发搜索以下平台：
+Use `scripts/search.py` to concurrently search the following platforms:
 
-| 平台 | 搜索 URL | 解析器 |
-|------|----------|--------|
-| Amazon | amazon.com/search?q={keyword} | parse_amazon.py |
+| Platform | Search URL | Parser |
+|----------|-----------|--------|
+| Amazon | amazon.com/s?k={keyword} | parse_amazon.py |
 | eBay | ebay.com/sch/i.html?_nkw={keyword} | parse_ebay.py |
+| Walmart | walmart.com/search?q={keyword} | parse_walmart.py |
+| Temu | temu.com/search_result.html?search_key={keyword} | parse_temu.py |
+| Etsy | etsy.com/search?q={keyword} | parse_etsy.py |
 | AliExpress | aliexpress.com/wholesale?SearchText={keyword} | parse_aliexpress.py |
-| 天猫国际 | tmall.com/search?q={keyword} | parse_tmall.py |
-| 京东全球购 | jd.com/search?keyword={keyword} | parse_jd.py |
 
-**语言处理**：自动将中文关键词转换为各平台本地语言（支持日语、英语、韩语等关键词翻译）。
+**Language handling**: Automatically translate Chinese keywords to English for Western platforms. Etsy is best for handmade/vintage — only include it when the query seems relevant (gifts, crafts, unique items, vintage).
 
-## 选项展示格式
+## Output Format — Cards Layout
+
+Display results as visual cards, not a table. Each card includes:
 
 ```
-🛍️ 全球最优选项 — [商品关键词]
+🛍️ Best Results for: [search keyword]
 
-| # | 平台 | 价格 | 配送 | 评分 | 销量 | 链接 |
-|---|------|------|------|------|------|------|
-| A | Amazon | ¥1,299 | 3-5天 | ⭐4.7 | 2.3k | [打开] |
-| B | eBay | ¥1,180 | 7-10天 | ⭐4.5 | 890 | [打开] |
-| C | AliExpress | ¥1,050 | 10-20天 | ⭐4.8 | 5.1k | [打开] |
-| D | 天猫国际 | ¥1,399 | 2-3天 | ⭐4.9 | 1.2k | [打开] |
-| E | 京东全球购 | ¥1,280 | 1-2天 | ⭐4.6 | 3.4k | [打开] |
-
-💡 推荐首选：D（天猫国际）— 配送最快，评分最高
-💳 支付方式：[平台账户] [信用卡统一支付] [记住信用卡下次用]
+┌─────────────────────────────────────────┐
+│ [Product Image]        🏅 BEST VALUE    │  ← badge on top pick only
+│ Platform: Walmart                        │
+│ Product: [Name, truncated to ~60 chars] │
+│ Price: $29.99  +  Shipping: $0.00       │
+│ Estimated Total: $29.99                 │
+│ Rating: ⭐ 4.7  (2,341 reviews)        │
+│ Delivery: 2–3 days                      │
+│ [View on Walmart →]                     │
+└─────────────────────────────────────────┘
 ```
 
-## 支付流程
+**Best Value badge** logic: Award to the card with the best combined score of (lowest estimated total) + (rating ≥ 4.0) + (delivery ≤ 7 days). Only one card gets the badge.
 
-### 模式一：平台账户支付（默认）
-AI 打开目标平台商品页 → 用户已在平台登录 → 直接用平台已存支付方式结账
+**Images**: Fetch the primary product thumbnail from each platform's search result and display inline above the product name.
 
-### 模式二：信用卡统一支付
-1. AI 在平台商品页填写收货地址
-2. AI 打开信用卡支付表单（独立安全页面）
-3. 用户输入卡号/有效期/姓名（CVV 不保存）
-4. 用户点击"确认支付"
-5. 支付结果展示
+**Estimated Total**: Always show price + shipping as a combined figure. If shipping is free, show "Shipping: FREE" and bold the total.
 
-### 模式三：记住信用卡（可选）
-- 首次输入信用卡信息后，加密存储到 `~/.qclaw/global-shop/cards.json`
-- 下次购物时直接选择已存卡号（仅末4位显示），仅需输入 CVV
-- 用户可随时说"删除已存信用卡"清除所有记录
+## Payment Flow
 
-### 安全红线
-- ❌ 不存储 CVV
-- ❌ 不接触支付密码
-- ❌ 不在非平台页面输入支付密码
-- ✅ 所有支付必须用户主动确认
-- ✅ 信用卡文件 `cards.json` 加密存储（AES-256）
+### Mode 1: Platform Account (default)
+AI opens the target platform product page → user is already logged in → checks out using saved payment on platform.
 
-## 平台账户预存
+### Mode 2: Credit Card (unified)
+1. AI opens platform product page and fills in shipping address
+2. AI opens credit card payment form (separate secure page)
+3. User enters card number / expiry / name (CVV never saved)
+4. User clicks "Confirm Payment"
+5. Payment result shown
 
-支持用户预存平台登录信息（可选）：
-- 存储路径：`~/.qclaw/global-shop/accounts.json`（加密）
-- 支持平台：Amazon、eBay、AliExpress、淘宝/天猫
-- 使用：说"用我的 Amazon 账户买"即可调用预存账户
+### Mode 3: Saved Card (optional)
+- After first credit card entry, encrypted storage to `~/.qclaw/global-shop/cards.json`
+- Future purchases: select saved card (only last 4 digits shown), enter CVV only
+- User can say "delete saved cards" to clear all records
 
-## 常用指令
+### Security Rules
+- ❌ Never store CVV
+- ❌ Never access payment passwords
+- ❌ Never enter payment passwords outside the platform page
+- ✅ All payments require explicit user confirmation
+- ✅ `cards.json` encrypted at rest (AES-256)
 
-| 用户说 | AI 执行 |
-|--------|---------|
-| "帮我买 AirPods" | 搜索 → 展示选项 → 用户选择 → 跳转 |
-| "最便宜的 iPhone 在哪" | 直接搜索最低价 |
-| "我想在 Amazon 买" | 只搜 Amazon |
-| "用我存过的卡支付" | 调取已存信用卡列表 |
-| "删除已存信用卡" | 清除 cards.json |
-| "加个新平台账户" | 引导添加平台账号信息 |
+## Platform Account Pre-storage
 
-## 脚本说明
+Users can optionally pre-store platform login info:
+- Storage path: `~/.qclaw/global-shop/accounts.json` (encrypted)
+- Supported: Amazon, eBay, Walmart, AliExpress, Etsy, Temu
+- Usage: "buy this with my Amazon account" → use pre-stored credentials
 
-- `scripts/search.py` — 并发搜索入口，接收关键词参数
-- `scripts/parse_*.py` — 各平台 HTML 解析器，输出标准化 JSON
-- `scripts/rank.py` — 多维度评分排序算法
-- `scripts/payment.py` — 信用卡加密存储与表单填充
-- `scripts/accounts.py` — 平台账户加密存储
+## Common Commands
 
-详细接口规范见 `references/platforms.md` 和 `references/payment.md`
+| User says | AI does |
+|-----------|---------|
+| "Help me buy AirPods" | Search → show cards → user picks → redirect |
+| "帮我买 AirPods" | Same as above |
+| "Cheapest iPhone anywhere" | Search all platforms, sort by estimated total |
+| "Find this on Etsy" | Search Etsy only |
+| "Only search Walmart and Amazon" | Restrict search to named platforms |
+| "Use my saved card" | Load saved card list |
+| "Delete saved cards" | Clear cards.json |
+| "Add a platform account" | Guide user to add account info |
+
+## Scripts
+
+- `scripts/search.py` — concurrent search entry point, accepts keyword args
+- `scripts/parse_*.py` — per-platform HTML parsers, output standardised JSON
+- `scripts/rank.py` — multi-dimension scoring and ranking, emits Best Value winner
+- `scripts/payment.py` — credit card encrypted storage and form filling
+- `scripts/accounts.py` — platform account encrypted storage
+
+See `references/platforms.md` and `references/payment.md` for detailed interface specs.
