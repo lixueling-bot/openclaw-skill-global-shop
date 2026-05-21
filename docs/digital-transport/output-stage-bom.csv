@@ -1,0 +1,34 @@
+Ref,Qty,Part Number,Manufacturer,Description,Package,Unit Price USD,Notes
+Y1,1,CCHD-957-25-22.5792,Crystek,OCXO 22.5792MHz ultra low phase noise,9x14mm SMD,80,For 44.1k/88.2k/176.4k/352.8k family
+Y2,1,CCHD-957-25-24.576,Crystek,OCXO 24.576MHz ultra low phase noise,9x14mm SMD,80,For 48k/96k/192k/384k family
+U1,1,HMC349ALP4CE,Analog Devices,SP2T RF switch DC-4GHz,QFN-16 4x4,18,Sample rate family selector
+U2,1,ADCLK948BCPZ,Analog Devices,LVPECL clock fanout buffer 6-output,LFCSP-32 5x5,35,Buffer + distribution
+U3,1,NB7L72MMNG,ON Semi,2.5GHz LVPECL D flip-flop,QFN-16 3x3,8,Reclock master  CRITICAL PART
+U4,1,SY58025UMG,Microchip/Microsemi,CML output driver / equalizer,QFN-16 3x3,15,Option A integrated CML
+U4-alt,4,BFR93AW,NXP,RF NPN transistor fT 5GHz,SOT-323,0.5,Option B discrete CML pair
+U4-alt,1,BF862,NXP,Low-noise N-JFET (constant current source),SOT-23,1.2,Option B current source
+U5,1,Si8645BB-B-IS1,Silicon Labs,Quad-channel digital isolator 150Mbps,SOIC-16W,6,Upstream data isolation
+U6,1,LM317T,TI,Adjustable voltage regulator,TO-220,0.6,Pre-regulator to +8V
+LDO1,1,LT3045EDD#PBF,Analog Devices,Ultra low noise LDO 500mA 0.8uVrms,DFN-12 3x3,7,+5V_CLK for OCXOs
+LDO2,1,LT3045EDD#PBF,Analog Devices,Ultra low noise LDO 500mA 0.8uVrms,DFN-12 3x3,7,+5V_DIG for buffer + DFF
+LDO3,1,LT3045EDD#PBF,Analog Devices,Ultra low noise LDO 500mA 0.8uVrms,DFN-12 3x3,7,+5V_DRV for CML driver
+LDO4,1,LT3045EDD#PBF,Analog Devices,Ultra low noise LDO 500mA 0.8uVrms,DFN-12 3x3,7,+3.3V_ISO for isolator B-side
+T1,1,SC916-02,Scientific Conversion,SPDIF pulse transformer 1:1 75Ohm,Through-hole,40,SPDIF output coupling
+T2,1,LL1572,Lundahl,AES/EBU transformer 1:1 110Ohm,Through-hole audio,80,AES output coupling premium
+D1-D4,4,MBR1045,ON Semi,Schottky rectifier 10A 45V soft recovery,TO-220,1.5,PSU bridge
+L1,1,7447014001,Wurth,Common mode choke 100uH 5A,Through-hole,4,PSU CM filter
+C1 C2,2,UKZ1J472MHM,Nichicon KZ,4700uF 25V audio grade electrolytic,Through-hole 18x35,12,PSU bulk cap
+J1,1,B6F30N3-NS3G-50,Amphenol RF,BNC connector 75Ohm true,Panel mount,8,SPDIF output
+J2,1,NC3FXX-B-NEUTRIK,Neutrik,XLR-F female chassis gold pin,Panel mount,6,AES output
+R1 R2 (U4-alt),2,RG2012P-500-B-T5,Susumu,50R 0.1% thin film 0805,0805,0.8,CML collector loads
+R3,1,RG1608P-750-B-T5,Susumu,75R 0.1% thin film SPDIF termination,0603,0.8,SPDIF impedance match
+R4,1,RG1608P-1100-B-T5,Susumu,110R 0.1% thin film AES termination,0603,0.8,AES impedance match
+Rs,1,RG1608P-101-B-T5,Susumu,100R 0.1% CML current source set,0603,0.8,If discrete CML
+C_decouple_high,40,GRM188R71H104KA93D,Murata,100nF X7R 50V 0402,0402,0.05,Decoupling everywhere
+C_decouple_mid,20,GRM188R71H103KA01D,Murata,10nF X7R 50V 0402,0402,0.05,Mid-freq decoupling
+C_decouple_low,20,GRM1885C1H102FA01D,Murata,1nF C0G 50V 0402,0402,0.08,High-freq decoupling
+C_decouple_lf,20,GRM188R60J106ME47D,Murata,10uF X7R 6.3V 0603,0603,0.20,Bulk decoupling
+C_decouple_tant,10,T520B107M006ATE040,Kemet T520,100uF 6.3V tantalum low ESR,2917,1.50,Local energy storage
+C_LDO_ref,4,GRM1885C1H103JA01D,Murata,10nF C0G 50V LT3045 SET cap,0603,0.10,LT3045 noise reference cap CRITICAL low leakage
+,,,,,,,
+ESTIMATED TOTAL,,,,,,~$520,Single channel SPDIF+AES output stage excluding PCB + chassis + main transformer

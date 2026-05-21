@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name "digital-transport")(type "KiCad")(uri "${KIPRJMOD}/symbols/digital-transport.kicad_sym")(options "")(descr "Custom symbols for digital transport"))
+)
