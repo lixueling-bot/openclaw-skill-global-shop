@@ -20,10 +20,13 @@
 | `output-stage-schematic.md` | 末级输出电路完整原理图（OCXO → CML → 变压器） | ✅ 完成 |
 | `output-stage-bom.csv` | 末级电路 BOM 清单 | ✅ 完成 |
 | `upstream-data-pipeline.md` | 上游数据流水线（SSD → host → FPGA → PSRAM → 末级） | ✅ 完成 |
+| `validator-board.md` | 5×8cm 核心验证板设计（测试整个项目的两个核心假设） | ✅ 完成 |
 | `power-system.md` | 整机电源系统设计 | 📝 待写 |
 | `chassis-mechanical.md` | 机箱、屏蔽、避震设计 | 📝 待写 |
 
-对应的 KiCad 工程在 `../../hardware/output-stage/`（仅末级）。
+对应的 KiCad 工程：
+- `../../hardware/output-stage/` — 完整末级电路（整机用）
+- `../../hardware/validator-board/` — 5×8cm 验证子板（先做这个验证理论）
 
 ## 整机系统框图（上游 + 末级）
 
